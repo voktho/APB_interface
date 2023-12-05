@@ -1,0 +1,144 @@
+module apb_top #(parameter DATA_WIDTH=32,ADDR_WIDTH=32)
+		       (input p_clk,
+		       input p_resetn,
+		       input p_sel,
+		       input p_enable,
+		       input p_write,
+		       input [ADDR_WIDTH-1:0] p_addr,
+		       input [DATA_WIDTH-1:0] p_wdata,
+		       input spi_bsy,
+		       input spi_rx_fifo_full,
+		       input spi_rx_fifo_empty,
+		       input spi_tx_fifo_full,
+		       input spi_tx_fifo_empty,
+		       output [3:0] spi_apb_slv_intf_dss,
+		       output [1:0] spi_apb_slv_intf_frf,
+		       output spi_apb_slv_intf_spo,
+		       output spi_apb_slv_intf_sph,
+		       output [7:0] spi_apb_slv_intf_scr,
+		       output spi_apb_slv_intf_lbm,
+		       output spi_apb_slv_intf_sse,
+		       output spi_apb_slv_intf_ms,
+		       output spi_apb_slv_intf_sod,
+		       output [15:0] spi_apb_slv_intf_data,
+		       output spi_apb_slv_intf_tfe,
+		       output spi_apb_slv_intf_tnf,
+		       output spi_apb_slv_intf_rne,
+		       output spi_apb_slv_intf_rff,
+		       output spi_apb_slv_intf_bsy,
+		       output [7:0] spi_apb_slv_intf_cpsdvsr,
+		       output reg [DATA_WIDTH-1:0] p_rdata,
+		       output  [DATA_WIDTH-1:0] wr_data,
+		       output p_ready
+		       );
+		       
+wire [ADDR_WIDTH-1:0] addr;	       
+ 
+apb_fsm dut_apb_fsm(.p_clk(p_clk),
+		       .p_resetn(p_resetn),
+		       .p_sel(p_sel),
+		       .p_enable(p_enable),
+		       .p_write(p_write),
+		       .p_addr(p_addr),
+		       .p_wdata(p_wdata),
+		       .p_ready(p_ready),
+		       .wr_en(wr_en),
+		       .rd_en(rd_en),
+		       .addr(addr),
+		       .wr_data(wr_data)
+		       ); 
+		       
+		       
+wire clk,reset_n,cr0_wr_en,cr1_wr_en,dr_wr_en,cpsr_wr_en;		       
+wire [DATA_WIDTH-1:0] cr0_d,cr1_d,dr_d,sr_d,cpsr_d;
+wire [DATA_WIDTH-1:0] cr0_q,cr1_q,dr_q,sr_q,cpsr_q;
+	      
+
+
+//CR0
+
+assign cr0_wr_en = wr_en &(addr==32'h0);
+assign cr0_d=cr0_wr_en ?{ 16'b0,wr_data[15:0]}:cr0_q;
+		      
+dff #(.DATA_WIDTH(32)) dut_cr0 (.clk(p_clk),
+			       .reset_n(p_resetn),
+			       .d(cr0_d),
+			       .q(cr0_q)
+			       );
+			       
+assign
+{spi_apb_slv_intf_scr,spi_apb_slv_intf_sph,spi_apb_slv_intf_spo,spi_apb_slv_intf_frf,spi_apb_slv_intf_dss}=cr0_q[15:0];
+
+
+//CR1
+
+assign cr1_wr_en = wr_en &(addr==32'h4);
+assign cr1_d=cr1_wr_en ?{28'b0,wr_data[3:0]}:cr1_q;
+				
+dff  #(.DATA_WIDTH(32)) dut_cr1(.clk(p_clk),
+			       .reset_n(p_resetn),
+			       .d(cr1_d),
+			       .q(cr1_q)
+				);
+assign {spi_apb_slv_intf_sod,spi_apb_slv_intf_ms,spi_apb_slv_intf_sse,spi_apb_slv_intf_lbm}=cr1_q[3:0];				
+ 
+ //DR
+ 
+ assign dr_wr_en = wr_en & (addr==32'h8);
+ assign dr_d=dr_wr_en ?{16'b0,wr_data[15:0]}:dr_q;
+ 
+ dff  #(.DATA_WIDTH(32)) dut_dr(.clk(p_clk),
+			       .reset_n(p_resetn),
+			       .d(dr_d),
+			       .q(dr_q)
+				);
+
+assign {spi_apb_slv_intf_data}=dr_q[15:0];
+				
+//SR
+
+
+assign sr_d={27'b0,spi_bsy,spi_rx_fifo_full,spi_rx_fifo_empty,spi_tx_fifo_full,spi_tx_fifo_empty};
+
+
+dff  #(.DATA_WIDTH(32)) dut_sr(.clk(p_clk),
+			       .reset_n(p_resetn),
+			       .d(sr_d),
+			       .q(sr_q)
+				);
+ 
+ assign {spi_apb_slv_intf_bsy,spi_apb_slv_intf_rff,spi_apb_slv_intf_rne,spi_apb_slv_intf_tnf,spi_apb_slv_intf_tfe}=sr_q[4:0];
+ 
+ 
+ //CPSR
+ 
+ assign cpsr_wr_en = wr_en & (addr==32'h10);
+ assign cpsr_d=cpsr_wr_en ?{24'b0,wr_data[7:0]}:cpsr_q;
+ 
+ dff  #(.DATA_WIDTH(32)) dut_cpsr(.clk(p_clk),
+			       .reset_n(p_resetn),
+			       .d(cpsr_d),
+			       .q(cpsr_q)
+				);
+				
+assign {spi_apb_slv_intf_cpsdvsr}=cpsr_q[7:0];
+
+
+//read data from register
+
+always @(*)
+begin
+casez(addr)
+
+32'h0:p_rdata=rd_en?cr0_q:32'b0;
+32'h4:p_rdata=rd_en?cr1_q:32'b0;
+32'h8:p_rdata=rd_en?dr_q:32'b0;
+32'hC:p_rdata=rd_en?sr_q:32'b0;//read only
+32'h10:p_rdata=rd_en?cpsr_q:32'b0;
+
+endcase
+
+end
+
+				
+endmodule

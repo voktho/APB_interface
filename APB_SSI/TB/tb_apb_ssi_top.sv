@@ -1,0 +1,133 @@
+module tb_apb_ssi_top;
+
+parameter ADDR_WIDTH=32,DATA_WIDTH=32;
+
+reg p_clk;
+reg p_resetn;
+reg p_sel;
+reg p_enable;
+reg p_write;
+reg [ADDR_WIDTH-1:0] p_addr;
+reg [DATA_WIDTH-1:0] p_wdata;
+reg spi_bsy;
+reg spi_rx_fifo_full;
+reg spi_rx_fifo_empty;
+reg spi_tx_fifo_full;
+reg spi_tx_fifo_empty;
+wire [3:0] spi_apb_slv_intf_dss;
+wire [1:0] spi_apb_slv_intf_frf;
+wire spi_apb_slv_intf_spo;
+wire spi_apb_slv_intf_sph;
+wire [7:0] spi_apb_slv_intf_scr;
+wire spi_apb_slv_intf_lbm;
+wire spi_apb_slv_intf_sse;
+wire spi_apb_slv_intf_ms;
+wire spi_apb_slv_intf_sod;
+wire [15:0] spi_apb_slv_intf_data;
+wire spi_apb_slv_intf_tfe;
+wire spi_apb_slv_intf_tnf;
+wire spi_apb_slv_intf_rne;
+wire spi_apb_slv_intf_rff;
+wire spi_apb_slv_intf_bsy;
+wire [7:0] spi_apb_slv_intf_cpsdvsr;
+wire [DATA_WIDTH-1:0] p_rdata;
+wire [DATA_WIDTH-1:0] wr_data;
+wire  p_ready;
+
+apb_ssi_top #(.DATA_WIDTH(32),.ADDR_WIDTH(32)) dut_apb_ssi_top (.p_clk(p_clk),
+								.p_resetn(p_resetn),
+								.p_sel(p_sel),
+								.p_enable(p_enable),
+								.p_write(p_write),
+								.p_addr(p_addr),
+								.p_wdata(p_wdata),
+								.spi_bsy(spi_bsy),
+								.spi_rx_fifo_full(spi_rx_fifo_full),
+								.spi_rx_fifo_empty(spi_rx_fifo_empty),
+								.spi_tx_fifo_full(spi_tx_fifo_full),
+								.spi_tx_fifo_empty(spi_tx_fifo_empty),
+								.spi_apb_slv_intf_dss(spi_apb_slv_intf_dss),
+								.spi_apb_slv_intf_frf(spi_apb_slv_intf_frf),
+								.spi_apb_slv_intf_spo(spi_apb_slv_intf_spo),
+								.spi_apb_slv_intf_sph(spi_apb_slv_intf_sph),
+								.spi_apb_slv_intf_scr(spi_apb_slv_intf_scr),
+								.spi_apb_slv_intf_lbm(spi_apb_slv_intf_lbm),
+								.spi_apb_slv_intf_sse(spi_apb_slv_intf_sse),
+								.spi_apb_slv_intf_ms(spi_apb_slv_intf_ms),
+								.spi_apb_slv_intf_sod(spi_apb_slv_intf_sod),
+								.spi_apb_slv_intf_data(spi_apb_slv_intf_data),
+								.spi_apb_slv_intf_tfe(spi_apb_slv_intf_tfe),
+								.spi_apb_slv_intf_tnf(spi_apb_slv_intf_tnf),
+								.spi_apb_slv_intf_rne(spi_apb_slv_intf_rne),
+								.spi_apb_slv_intf_rff(spi_apb_slv_intf_rff),
+								.spi_apb_slv_intf_bsy(spi_apb_slv_intf_bsy),
+								.spi_apb_slv_intf_cpsdvsr(spi_apb_slv_intf_cpsdvsr),
+								.p_rdata(p_rdata),
+								.wr_data(wr_data),
+								.p_ready(p_ready)
+								);
+
+
+
+
+
+always #5 p_clk <= ~p_clk;
+
+initial begin
+
+p_clk <= 0;
+p_resetn <= 0;
+p_sel <=0;
+p_enable <= 0;
+p_write <=0 ;
+p_addr <=32'h0;
+p_wdata <=32'h0;
+spi_bsy <= 0;
+spi_rx_fifo_full <= 0;
+spi_rx_fifo_empty <=0;
+spi_tx_fifo_full <=0;
+spi_tx_fifo_empty <= 0;
+
+@(posedge p_clk);
+p_resetn <=  1;
+p_sel <=1;
+p_enable <= 0;
+p_write <= 1;
+p_addr <=32'h04;
+p_wdata <=32'hAB;
+spi_bsy <= 1;
+spi_rx_fifo_full <= 0;
+spi_rx_fifo_empty <=0;
+spi_tx_fifo_full <=0;
+spi_tx_fifo_empty <= 1;
+
+@(posedge p_clk);
+
+p_enable <= 1;
+
+@(posedge p_clk);
+p_resetn <=  1;
+p_sel <=1;
+p_enable <= 0;
+p_write <= 0;
+p_addr <=32'hC;
+p_wdata <=32'hAB;
+spi_bsy <= 1;
+spi_rx_fifo_full <= 0;
+spi_rx_fifo_empty <=1;
+spi_tx_fifo_full <=0;
+spi_tx_fifo_empty <= 1;
+
+@(posedge p_clk);
+
+p_enable <= 1;
+
+#80 $finish;
+
+end
+
+
+
+
+
+endmodule

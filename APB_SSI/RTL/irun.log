@@ -1,0 +1,13 @@
+irun: 10.20-s100: (c) Copyright 1995-2011 Cadence Design Systems, Inc.
+TOOL:	irun	10.20-s100: Started on Mar 07, 2023 at 00:06:35 BDT
+irun
+	apb_top.v
+file: apb_top.v
+assign cr1_d=cr1_wr_en ?{28'b0,wr_data[3:0]}:cr1_q;
+                                                 |
+ncvlog: *E,UNDIDN (apb_top.v,76|49): 'cr1_q': undeclared identifier [12.5(IEEE)].
+	module worklib.apb_top:v
+		errors: 1, warnings: 0
+ncvlog: *F,NOTOPL: no top-level unit found, must have recursive instances.
+irun: *E,VLGERR: An error occurred during parsing.  Review the log file for errors with the code *E and fix those identified problems to proceed.  Exiting with code (status 2).
+TOOL:	irun	10.20-s100: Exiting on Mar 07, 2023 at 00:06:35 BDT  (total: 00:00:00)

@@ -1,0 +1,65 @@
+module apb_fsm #(parameter DATA_WIDTH=32,ADDR_WIDTH=32)
+		      (input p_clk,
+		       input p_resetn,
+		       input p_sel,
+		       input p_enable,
+		       input p_write,
+		       input [ADDR_WIDTH-1:0] p_addr,
+		       input [DATA_WIDTH-1:0] p_wdata,
+		       output p_ready,
+		       output reg wr_en,
+		       output reg rd_en,
+		       output [ADDR_WIDTH-1:0] addr,
+		       output [DATA_WIDTH-1:0] wr_data
+		       );
+	       
+	      
+reg [1:0] pstate,nstate;
+parameter IDLE=2'b00,SETUP=2'b01,WAIT=2'b10;
+
+//present State
+always @(posedge p_clk, negedge p_resetn)
+begin
+	if(!p_resetn)
+	pstate <= IDLE;
+	else
+	pstate <= nstate;
+	
+end
+
+//next state
+always@(*)
+begin
+casez(pstate)
+
+IDLE:nstate <= p_sel ? SETUP:IDLE;
+SETUP:nstate <= p_sel?(p_enable?WAIT:SETUP):IDLE;
+WAIT:nstate <= (p_sel & p_enable)?SETUP:IDLE;
+
+endcase
+end
+
+//output
+always@(*)
+begin
+casez(pstate)
+IDLE: begin
+	wr_en=0;
+	rd_en=0;
+      end
+SETUP: begin
+	wr_en=p_write;
+	rd_en=~p_write;
+      end	
+WAIT: begin
+	wr_en=0;
+	rd_en=0;
+      end      
+endcase
+end
+
+assign p_ready=1;
+assign wr_data=p_wdata;
+assign addr=p_addr;
+
+endmodule
